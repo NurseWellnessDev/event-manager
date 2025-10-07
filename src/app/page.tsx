@@ -45,9 +45,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
-        <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-          Event Manager
-        </h1>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Event Manager
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Create, manage, and view events with our modern calendar application.
+            Powered by AWS Lambda and featuring beautiful glassmorphism design.
+          </p>
+        </div>
 
         {/* Tab Navigation */}
         <div className="flex justify-center mb-8">
@@ -84,6 +90,32 @@ export default function Home() {
           )}
 
         </div>
+
+        {/* Footer */}
+        <footer className="mt-16 py-8 border-t border-gray-200 text-center">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="text-gray-600">
+                <p className="text-sm">
+                  Built with ❤️ using <span className="font-semibold">Next.js</span> and <span className="font-semibold">AWS Lambda</span>
+                </p>
+              </div>
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <a
+                  href="https://github.com/NurseWellnessDev/event-manager"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-blue-600 transition-colors duration-200 flex items-center space-x-1"
+                >
+                  <span>⭐</span>
+                  <span>Star on GitHub</span>
+                </a>
+                <span>•</span>
+                <span>v1.0.0</span>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
