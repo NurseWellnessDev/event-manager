@@ -28,25 +28,14 @@ export default function EventsCalendar() {
     try {
       setLoading(true);
 
-      // Fetch both webhook events (read-only) and created events (deletable)
-      const [webhookResponse, createdEventsResponse] = await Promise.all([
-        fetch(API_CONFIG.CALENDAR_WEBHOOK_ENDPOINT),
-        fetch(API_CONFIG.EVENT_ENDPOINT).catch(() => null) // Don't fail if created events endpoint fails
-      ]);
+      // Fetch all events from webhook URL (includes both read-only and DynamoDB events)
+      const response = await fetch(API_CONFIG.CALENDAR_WEBHOOK_ENDPOINT);
 
-      const webhookEvents: WebhookEvent[] = webhookResponse.ok
-        ? await webhookResponse.json()
-        : [];
-
-      let createdEvents: WebhookEvent[] = [];
-      if (createdEventsResponse && createdEventsResponse.ok) {
-        const createdData = await createdEventsResponse.json();
-        // Handle the response format from your Lambda function
-        createdEvents = createdData.events || createdData || [];
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
       }
 
-      // Combine both event sources
-      const allEvents = [...webhookEvents, ...createdEvents];
+      const allEvents: WebhookEvent[] = await response.json();
       setEvents(allEvents);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
@@ -69,17 +58,18 @@ export default function EventsCalendar() {
       setDeletingEventId(eventId);
       await API_METHODS.deleteEvent(eventId);
 
-      // Remove event from local state
+      // Remove event from local state immediately for better UX
       setEvents(prev => prev.filter(event => event.id !== eventId));
 
       // Show success message
       setDeleteSuccess('Event deleted successfully!');
       setSelectedEvent(null);
 
+      // Refresh events from server to ensure synchronization
+      setTimeout(() => fetchEvents(), 1000);
+
       // Clear success message after 3 seconds
       setTimeout(() => setDeleteSuccess(null), 3000);
-
-      console.log('Event deleted:', eventId);
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event. Please try again.');
