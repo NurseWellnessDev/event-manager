@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { WebhookEvent } from '@/types/event';
+import { API_METHODS } from '@/config/api';
 
 const WEBHOOK_URL = 'https://kf5mshq5yyqxzxh6r6ew7y6mia0gcqvv.lambda-url.us-east-1.on.aws/';
 
@@ -18,6 +19,8 @@ export default function EventsCalendar() {
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<WebhookEvent | null>(null);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -36,6 +39,39 @@ export default function EventsCalendar() {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string | undefined) => {
+    if (!eventId) {
+      alert('Cannot delete event: No event ID available');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingEventId(eventId);
+      await API_METHODS.deleteEvent(eventId);
+
+      // Remove event from local state
+      setEvents(prev => prev.filter(event => event.id !== eventId));
+
+      // Show success message
+      setDeleteSuccess('Event deleted successfully!');
+      setSelectedEvent(null);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setDeleteSuccess(null), 3000);
+
+      console.log('Event deleted:', eventId);
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event. Please try again.');
+    } finally {
+      setDeletingEventId(null);
     }
   };
 
@@ -187,6 +223,18 @@ export default function EventsCalendar() {
         ))}
       </div>
 
+      {/* Success Message */}
+      {deleteSuccess && (
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg" style={{
+          background: 'rgba(34, 197, 94, 0.9)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          <div className="text-white font-medium">{deleteSuccess}</div>
+        </div>
+      )}
+
       {/* Event Details Modal - Liquid Glass Overlay */}
       {selectedEvent && (
         <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{
@@ -224,13 +272,13 @@ export default function EventsCalendar() {
                 <span className="font-semibold text-gray-900">Description:</span>
                 <p className="mt-1 text-gray-700 leading-relaxed">{selectedEvent.description}</p>
               </div>
-              {selectedEvent.link && (
-                <div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {selectedEvent.link && (
                   <a
                     href={selectedEvent.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-2 px-4 py-2 text-gray-800 font-semibold rounded-lg transition-all duration-200"
+                    className="inline-block px-4 py-2 text-gray-800 font-semibold rounded-lg transition-all duration-200"
                     style={{
                       background: 'rgba(255, 255, 255, 0.3)',
                       backdropFilter: 'blur(10px)',
@@ -246,8 +294,44 @@ export default function EventsCalendar() {
                   >
                     View Details
                   </a>
-                </div>
-              )}
+                )}
+
+                {selectedEvent.id && (
+                  <button
+                    onClick={() => handleDeleteEvent(selectedEvent.id)}
+                    disabled={deletingEventId === selectedEvent.id}
+                    className="inline-block px-4 py-2 font-semibold rounded-lg transition-all duration-200"
+                    style={{
+                      background: deletingEventId === selectedEvent.id
+                        ? 'rgba(156, 163, 175, 0.3)'
+                        : 'rgba(239, 68, 68, 0.3)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: deletingEventId === selectedEvent.id ? '#6B7280' : '#DC2626'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!deletingEventId) {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!deletingEventId) {
+                        e.currentTarget.style.background = 'rgba(239, 68, 68, 0.3)';
+                      }
+                    }}
+                  >
+                    {deletingEventId === selectedEvent.id ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                        Deleting...
+                      </div>
+                    ) : (
+                      'Delete Event'
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ export interface Event {
 export type CreateEventData = Omit<Event, 'id'>;
 
 export interface WebhookEvent {
+  id?: string;
   date: string;
   title: string;
   time: string;
