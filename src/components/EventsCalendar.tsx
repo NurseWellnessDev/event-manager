@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { WebhookEvent } from '@/types/event';
-import { API_METHODS } from '@/config/api';
-
-const WEBHOOK_URL = 'https://kf5mshq5yyqxzxh6r6ew7y6mia0gcqvv.lambda-url.us-east-1.on.aws/';
+import { API_METHODS, API_CONFIG } from '@/config/api';
 
 interface CalendarDay {
   date: Date;
@@ -29,12 +27,27 @@ export default function EventsCalendar() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(WEBHOOK_URL);
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
+
+      // Fetch both webhook events (read-only) and created events (deletable)
+      const [webhookResponse, createdEventsResponse] = await Promise.all([
+        fetch(API_CONFIG.CALENDAR_WEBHOOK_ENDPOINT),
+        fetch(API_CONFIG.EVENT_ENDPOINT).catch(() => null) // Don't fail if created events endpoint fails
+      ]);
+
+      const webhookEvents: WebhookEvent[] = webhookResponse.ok
+        ? await webhookResponse.json()
+        : [];
+
+      let createdEvents: WebhookEvent[] = [];
+      if (createdEventsResponse && createdEventsResponse.ok) {
+        const createdData = await createdEventsResponse.json();
+        // Handle the response format from your Lambda function
+        createdEvents = createdData.events || createdData || [];
       }
-      const data: WebhookEvent[] = await response.json();
-      setEvents(data);
+
+      // Combine both event sources
+      const allEvents = [...webhookEvents, ...createdEvents];
+      setEvents(allEvents);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
@@ -212,7 +225,7 @@ export default function EventsCalendar() {
                     onClick={() => setSelectedEvent(event)}
                     className="cursor-pointer"
                   >
-                    <div className="font-medium truncate pr-6">{event.title}</div>
+                    <div className={`font-medium truncate ${event.id ? 'pr-6' : ''}`}>{event.title}</div>
                     <div className="text-blue-600">{event.time}</div>
                   </div>
                   {event.id && (
