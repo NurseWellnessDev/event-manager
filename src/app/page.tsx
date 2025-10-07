@@ -4,37 +4,15 @@ import { useState } from 'react';
 import EventForm from '@/components/EventForm';
 import EventsCalendar from '@/components/EventsCalendar';
 import { Event } from '@/types/event';
-import { API_METHODS } from '@/config/api';
 
 type TabType = 'create' | 'calendar';
 
 export default function Home() {
-  const [events, setEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('calendar');
-  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   const handleEventSubmit = (event: Event) => {
-    setEvents(prev => [...prev, event]);
     console.log('Event created:', event);
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    if (!eventId) return;
-
-    try {
-      setDeletingEventId(eventId);
-      await API_METHODS.deleteEvent(eventId);
-
-      // Remove event from local state
-      setEvents(prev => prev.filter(event => event.id !== eventId));
-
-      console.log('Event deleted:', eventId);
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Failed to delete event. Please try again.');
-    } finally {
-      setDeletingEventId(null);
-    }
+    // Event is handled by the EventForm component and saved to backend
   };
 
   const tabs = [

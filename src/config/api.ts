@@ -1,3 +1,5 @@
+import { CreateEventData } from '@/types/event';
+
 export const API_CONFIG = {
   // Event management endpoint (your Lambda function)
   EVENT_ENDPOINT: process.env.NEXT_PUBLIC_API_ENDPOINT || 'https://xsg0riey7e.execute-api.us-east-1.amazonaws.com/prod/eventcalendar',
@@ -16,7 +18,7 @@ export const API_CONFIG = {
 
 // API helper functions
 export const API_METHODS = {
-  createEvent: async (eventData: any) => {
+  createEvent: async (eventData: CreateEventData) => {
     const response = await fetch(API_CONFIG.EVENT_ENDPOINT, {
       method: 'POST',
       headers: API_CONFIG.DEFAULT_HEADERS,
