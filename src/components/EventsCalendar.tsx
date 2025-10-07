@@ -205,12 +205,33 @@ export default function EventsCalendar() {
               {day.events.slice(0, 2).map((event, eventIndex) => (
                 <div
                   key={eventIndex}
-                  onClick={() => setSelectedEvent(event)}
-                  className="text-xs p-1 bg-blue-100 text-blue-800 rounded cursor-pointer hover:bg-blue-200 transition-colors"
+                  className="text-xs p-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors relative group"
                   title={event.title}
                 >
-                  <div className="font-medium truncate">{event.title}</div>
-                  <div className="text-blue-600">{event.time}</div>
+                  <div
+                    onClick={() => setSelectedEvent(event)}
+                    className="cursor-pointer"
+                  >
+                    <div className="font-medium truncate pr-6">{event.title}</div>
+                    <div className="text-blue-600">{event.time}</div>
+                  </div>
+                  {event.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteEvent(event.id);
+                      }}
+                      disabled={deletingEventId === event.id}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] font-bold"
+                      title="Delete event"
+                    >
+                      {deletingEventId === event.id ? (
+                        <div className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        '×'
+                      )}
+                    </button>
+                  )}
                 </div>
               ))}
               {day.events.length > 2 && (
