@@ -1,0 +1,4 @@
+Deployment trigger file - created to force Vercel deployment
+Timestamp: 2025-10-07
+Project: Event Manager
+Repository: https://github.com/NurseWellnessDev/event-manager
